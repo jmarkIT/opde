@@ -22,9 +22,42 @@ type Group struct {
 	State       string   `json:"state"`
 	Created_At  string   `json:"created_at"`
 	Permissions []string `json:"permissions"`
+	Members     []GroupMember
 }
 
-type GroupUser struct {
+func (g *Group) setMembers(account string) {
+	var cmd exec.Cmd
+	group := g.Name
+	if account != "" {
+		cmd = *exec.Command("op", "--format", "json", "--account", account, "group", "user", "list", group)
+	} else {
+		cmd = *exec.Command("op", "--format", "json", "group", "user", "list", group)
+	}
+	out, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var users []GroupMember
+	err = json.Unmarshal([]byte(out), &users)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	g.Members = users
+}
+
+func (g *Group) getManagers(account string) []GroupMember {
+	var managers []GroupMember
+	for _, user := range g.Members {
+		if user.Role == "MANAGER" && user.State == "ACTIVE" {
+			managers = append(managers, user)
+		}
+	}
+
+	return managers
+}
+
+type GroupMember struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -53,38 +86,7 @@ func getVaultGroups(vault string, account string) []Group {
 	return groups
 }
 
-func getMembers(group string, account string) []GroupUser {
-	var cmd exec.Cmd
-	if account != "" {
-		cmd = *exec.Command("op", "--format", "json", "--account", account, "group", "user", "list", group)
-	} else {
-		cmd = *exec.Command("op", "--format", "json", "group", "user", "list", group)
-	}
-	out, err := cmd.Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	var users []GroupUser
-	err = json.Unmarshal([]byte(out), &users)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return users
-}
-
-func getManagers(users []GroupUser) []GroupUser {
-	var managers []GroupUser
-	for _, user := range users {
-		if user.Role == "MANAGER" && user.State == "ACTIVE" {
-			managers = append(managers, user)
-		}
-	}
-
-	return managers
-}
-
-func printOutput(group Group, managers []GroupUser, csv bool) {
+func printOutput(group Group, managers []GroupMember, csv bool) {
 	if csv {
 		for _, manager := range managers {
 			fmt.Printf("%s,%s,%s\n", group.Name, manager.Name, manager.Email)
@@ -117,8 +119,8 @@ func main() {
 
 	groups := getVaultGroups(vault, account)
 	for _, group := range groups {
-		members := getMembers(group.Name, account)
-		managers := getManagers(members)
+		group.setMembers(account)
+		managers := group.getManagers(account)
 		printOutput(group, managers, csv)
 	}
 }
