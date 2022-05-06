@@ -46,6 +46,17 @@ func (g *Group) setMembers(account string) {
 	g.Members = users
 }
 
+func (g *Group) getManagers(account string) []GroupMember {
+	var managers []GroupMember
+	for _, user := range g.Members {
+		if user.Role == "MANAGER" && user.State == "ACTIVE" {
+			managers = append(managers, user)
+		}
+	}
+
+	return managers
+}
+
 type GroupMember struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -73,17 +84,6 @@ func getVaultGroups(vault string, account string) []Group {
 		log.Fatal(err)
 	}
 	return groups
-}
-
-func getManagers(users []GroupMember) []GroupMember {
-	var managers []GroupMember
-	for _, user := range users {
-		if user.Role == "MANAGER" && user.State == "ACTIVE" {
-			managers = append(managers, user)
-		}
-	}
-
-	return managers
 }
 
 func printOutput(group Group, managers []GroupMember, csv bool) {
@@ -120,7 +120,7 @@ func main() {
 	groups := getVaultGroups(vault, account)
 	for _, group := range groups {
 		group.setMembers(account)
-		//managers := getManagers(members)
-		printOutput(group, group.Members, csv)
+		managers := group.getManagers(account)
+		printOutput(group, managers, csv)
 	}
 }
