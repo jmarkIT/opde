@@ -24,7 +24,7 @@ type Group struct {
 	Permissions []string `json:"permissions"`
 }
 
-type User struct {
+type GroupUser struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -53,7 +53,7 @@ func getVaultGroups(vault string, account string) []Group {
 	return groups
 }
 
-func getManagers(group string, account string) []User {
+func getManagers(group string, account string) []GroupUser {
 	var cmd exec.Cmd
 	if account != "" {
 		cmd = *exec.Command("op", "--format", "json", "--account", account, "group", "user", "list", group)
@@ -64,12 +64,12 @@ func getManagers(group string, account string) []User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var users []User
+	var users []GroupUser
 	err = json.Unmarshal([]byte(out), &users)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var managers []User
+	var managers []GroupUser
 	for _, user := range users {
 		if user.Role == "MANAGER" && user.State == "ACTIVE" {
 			managers = append(managers, user)
@@ -79,7 +79,7 @@ func getManagers(group string, account string) []User {
 	return managers
 }
 
-func printOutput(group Group, managers []User, csv bool) {
+func printOutput(group Group, managers []GroupUser, csv bool) {
 	if csv {
 		for _, manager := range managers {
 			fmt.Printf("%s,%s,%s\n", group.Name, manager.Name, manager.Email)
