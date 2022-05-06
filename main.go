@@ -75,26 +75,6 @@ func getVaultGroups(vault string, account string) []Group {
 	return groups
 }
 
-func getMembers(group string, account string) []GroupMember {
-	var cmd exec.Cmd
-	if account != "" {
-		cmd = *exec.Command("op", "--format", "json", "--account", account, "group", "user", "list", group)
-	} else {
-		cmd = *exec.Command("op", "--format", "json", "group", "user", "list", group)
-	}
-	out, err := cmd.Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	var users []GroupMember
-	err = json.Unmarshal([]byte(out), &users)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return users
-}
-
 func getManagers(users []GroupMember) []GroupMember {
 	var managers []GroupMember
 	for _, user := range users {
