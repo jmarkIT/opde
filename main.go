@@ -53,7 +53,7 @@ func getVaultGroups(vault string, account string) []Group {
 	return groups
 }
 
-func getManagers(group string, account string) []GroupUser {
+func getMembers(group string, account string) []GroupUser {
 	var cmd exec.Cmd
 	if account != "" {
 		cmd = *exec.Command("op", "--format", "json", "--account", account, "group", "user", "list", group)
@@ -69,6 +69,11 @@ func getManagers(group string, account string) []GroupUser {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	return users
+}
+
+func getManagers(users []GroupUser) []GroupUser {
 	var managers []GroupUser
 	for _, user := range users {
 		if user.Role == "MANAGER" && user.State == "ACTIVE" {
@@ -112,7 +117,8 @@ func main() {
 
 	groups := getVaultGroups(vault, account)
 	for _, group := range groups {
-		managers := getManagers(group.Name, account)
+		members := getMembers(group.Name, account)
+		managers := getManagers(members)
 		printOutput(group, managers, csv)
 	}
 }
