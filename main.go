@@ -9,6 +9,12 @@ import (
 	"os/exec"
 )
 
+const usage = `Usage:
+	opde [options] (vault)
+Options:
+	-a, --account ACCOUNT	Shortname for 1Password account to use
+	-c, --csv		Print output in csv format`
+
 type Vault struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
@@ -107,8 +113,13 @@ func main() {
 	var account, vault string
 	var csv bool
 
+	flag.BoolVar(&csv, "c", false, "Print in CSV format")
 	flag.BoolVar(&csv, "csv", false, "Print in CSV format")
+	flag.StringVar(&account, "a", "", "1Password account shorthand")
 	flag.StringVar(&account, "account", "", "1Password account shorthand")
+	flag.Usage = func() {
+		fmt.Println(usage)
+	}
 	flag.Parse()
 	if len(flag.Args()) <= 0 {
 		fmt.Println("Please include the name or id of a vault")
