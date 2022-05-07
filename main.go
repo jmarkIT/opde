@@ -9,11 +9,14 @@ import (
 	"os/exec"
 )
 
+const versionNumber = "0.0.1"
+
 const usage = `Usage:
 	opde [options] (vault)
 Options:
 	-a, --account ACCOUNT	Shortname for 1Password account to use
-	-c, --csv		Print output in csv format`
+	-c, --csv		Print output in csv format
+	-v, --version	Print version number`
 
 type Vault struct {
 	ID              string `json:"id"`
@@ -111,16 +114,24 @@ func printOutput(group Group, managers []GroupMember, csv bool) {
 func main() {
 
 	var account, vault string
-	var csv bool
+	var csv, version bool
 
 	flag.BoolVar(&csv, "c", false, "Print in CSV format")
 	flag.BoolVar(&csv, "csv", false, "Print in CSV format")
 	flag.StringVar(&account, "a", "", "1Password account shorthand")
 	flag.StringVar(&account, "account", "", "1Password account shorthand")
+	flag.BoolVar(&version, "v", false, "")
+	flag.BoolVar(&version, "version", false, "")
 	flag.Usage = func() {
 		fmt.Println(usage)
 	}
 	flag.Parse()
+
+	if version {
+		fmt.Printf("opde version %s\n", versionNumber)
+		os.Exit(0)
+	}
+
 	if len(flag.Args()) <= 0 {
 		fmt.Println("Please include the name or id of a vault")
 		os.Exit(1)
