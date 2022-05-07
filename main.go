@@ -122,9 +122,11 @@ func main() {
 	flag.StringVar(&account, "account", "", "1Password account shorthand")
 	flag.BoolVar(&version, "v", false, "")
 	flag.BoolVar(&version, "version", false, "")
+
 	flag.Usage = func() {
 		fmt.Println(usage)
 	}
+
 	flag.Parse()
 
 	if version {
