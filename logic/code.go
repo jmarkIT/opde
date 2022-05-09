@@ -11,6 +11,7 @@ type Vault struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
 	Content_Version int    `json:"content_id"`
+	Groups          []Group
 }
 
 type Group struct {
@@ -21,6 +22,27 @@ type Group struct {
 	Created_At  string   `json:"created_at"`
 	Permissions []string `json:"permissions"`
 	Members     []GroupMember
+}
+
+func (v *Vault) SetGroups(account string) {
+	var cmd exec.Cmd
+	vault := v.Name
+	if account != "" {
+		cmd = *exec.Command("op", "--format", "json", "--account", account, "vault", "group", "list", vault)
+	} else {
+		cmd = *exec.Command("op", "--format", "json", "vault", "group", "list", vault)
+	}
+	out, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var groups []Group
+	err = json.Unmarshal([]byte(out), &groups)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	v.Groups = groups
 }
 
 func (g *Group) SetMembers(account string) {
